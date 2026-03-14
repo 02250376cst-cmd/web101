@@ -1,0 +1,97 @@
+## Practical: Building a TikTok Clone using Next.js
+
+# Objective
+
+The main objective of this practical was to build a simple TikTok-like web application using Next.js. Through this task, I wanted to understand how a modern web application is structured and how different pages can be connected in a single project. This practical also helped me understand how reusable components can make development easier.
+
+
+
+# Technologies Used
+
+In this project, I used several technologies to build the application:
+
+* Next.js
+* React.js
+* JavaScript
+* CSS
+* Node.js
+
+Next.js and React were mainly used to create the pages and components, while CSS was used to design the layout of the application.
+
+
+
+# Project Structure
+
+The project is organised using folders so that the files are easier to manage. The main part of the project is inside the **src** folder where the application pages and components are stored.
+
+Example structure:
+
+tiktok-clone
+│
+├── public
+│
+├── src
+│   ├── app
+│   │   ├── explore
+│   │   ├── following
+│   │   ├── login
+│   │   ├── signup
+│   │   ├── upload
+│   │   ├── profile
+│   │   └── live
+│   │
+│   ├── components
+│   │   ├── layout
+│   │   └── ui
+│
+└── package.json
+
+This structure helps keep the project organised and easier to understand while working on different parts of the application.
+
+
+
+# Features Implemented
+
+In this application, several pages were created to simulate a TikTok-style platform. These include:
+
+* Home page
+* Explore page
+* Following page
+* Login page
+* Signup page
+* Upload page
+* Profile page
+* Live page
+
+The project also uses reusable components such as **VideoCard** and **VideoFeed** to display video content in a structured way.
+
+
+
+# Steps to Run the Project
+
+To run this project locally, the following steps were followed:
+
+1. Clone the repository from GitHub.
+2. Open the project folder in a code editor.
+3. Install the required dependencies using npm.
+4. Run the development server using the command **npm run dev**.
+5. Open a browser and go to **http://localhost:3000** to view the application.
+
+
+
+# Screenshots
+
+Screenshots of the working application are included to show how the pages look when the project is running.
+
+Examples include:
+
+* Home Page
+* Login Page
+* Explore Page
+* Profile Page
+
+
+
+# Conclusion
+
+From this practical, I gained a better understanding of how Next.js works and how web applications can be built using reusable components. I also learned how to organise project files and manage the development process. This task helped improve my confidence in working with modern web development tools.
