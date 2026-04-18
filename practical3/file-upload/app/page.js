@@ -72,7 +72,7 @@ export default function Home() {
         {/* Preview */}
         {filePreview && (
           <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-2">Preview:</h3>
+            <h3 className="text-lg font-semibold mb-2 text-gray-800">Preview:</h3>
             {filePreview.type?.startsWith("image/") ? (
               <img
                 src={filePreview.url}
