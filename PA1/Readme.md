@@ -1,4 +1,4 @@
-# Amazon Home Page — WEB101 PA1 # git link 
+# Amazon Home Page — WEB101 PA1 # git link https://github.com/02250376cst-cmd/web101
 # Overview
 
 In this assignment, I tried to recreate the Amazon home page using Next.js and Tailwind CSS.
@@ -6,7 +6,7 @@ The main aim of this project was to understand how modern websites are built usi
 
 While doing this project, I faced some small difficulties, especially in layout design and responsiveness, but I managed to solve them by practicing and checking online resources.
 
-# Functionality
+# Functionality 
 
 This web application includes several features similar to the Amazon homepage:
 
@@ -66,6 +66,9 @@ Mobile: less than 640px
 Tablet: 640px to 1024px
 Desktop: above 1024px
 
+# Result
+    ![alt text](<Screenshot 2026-04-03 205910.png>)
+    
 # Conclusion
 
 From this assignment, I learned how to build a real-world style web page using React and Next.js.
