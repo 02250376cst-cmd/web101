@@ -1,0 +1,36 @@
+# Todo List Application with Zustand
+
+## Overview
+This project is a simple Todo List application built with **React** and **Zustand** for state management. It demonstrates how Zustand can simplify state handling compared to prop drilling or Context, and includes persistence using localStorage.
+
+## Features
+- Add new todos
+- Toggle todos as completed or not
+- Delete individual todos
+- Clear all completed todos
+- Persistent storage with localStorage
+
+## Project Setup
+1. Create a new Vite React project:
+   ```bash
+   npx create-vite@latest todo-zustand
+   cd todo-zustand
+   npm install
+   npm install zustand
+
+src/
+  components/
+    TodoInput.jsx
+    TodoItem.jsx
+    TodoList.jsx
+  store/
+    todoStore.js
+  App.jsx
+  main.jsx
+
+npm run dev
+
+## Screenshots
+
+![alt text](<Screenshot 2026-05-14 224934.png>)
+![alt text](<Screenshot 2026-05-14 225013.png>)

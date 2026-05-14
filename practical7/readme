@@ -1,0 +1,62 @@
+# Sales Analytics Dashboard
+
+This project is a **React-based analytics dashboard** that demonstrates how to use different charting libraries for **data visualization**. It was developed as part of Practical 7: Data Visualization.
+
+##  Features
+- **Monthly Sales Chart (Line Chart)** using Recharts
+- **Product Category Chart (Pie Chart)** using Recharts
+- **Customer Acquisition Chart (Bar Chart)** using react-chartjs-2
+- **Weekly Visitors Chart (Area Chart)** using react-chartjs-2
+- Responsive and interactive charts
+- Clean and modular component structure
+
+## Project Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/syangche/Data-Visualisation.git
+
+2. Navigate into the project folder:
+
+    bash
+    cd Data-Visualisation
+
+3. Install dependencies:
+
+    bash
+    npm install
+
+4. Run the development server:
+
+    npm run dev
+
+## File Structure
+    src/
+ ├── components/
+ │    ├── MonthlySalesChart.jsx
+ │    ├── ProductCategoryChart.jsx
+ │    ├── CustomerAcquisitionChart.jsx
+ │    └── WeeklyVisitorsChart.jsx
+ ├── data/
+ │    └── salesData.js
+ ├── App.jsx
+ └── App.css
+
+## Libraries Used
+
+Recharts – for Line and Pie charts
+
+react-chartjs-2 (react-chartjs-2.js.org in Bing) – for Bar and Area charts
+
+date-fns – for date formatting
+
+## Learning Outcomes
+
+Implementing charting libraries in React
+
+Creating different chart types
+
+Making charts responsive and interactive
+
+Loading and transforming data
+
+Optimizing charts for performance
