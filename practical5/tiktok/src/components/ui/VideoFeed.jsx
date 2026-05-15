@@ -1,12 +1,12 @@
 'use client';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { videoService } from '@/services/videoService';
 import VideoCard from './VideoCard';
 
 export default function VideoFeed({ type = 'forYou', userInteracted }) {
-  const sentinelRef = useRef(null);
-  const isLoadingRef = useRef(false);
+
+    const sentinelRef = useRef(null);
 
   const fetchVideos = useCallback(async ({ pageParam = undefined }) => {
     const fetcher = type === 'following'
@@ -28,30 +28,32 @@ export default function VideoFeed({ type = 'forYou', userInteracted }) {
     queryKey: ['videos', type],
     queryFn: fetchVideos,
     getNextPageParam: (lastPage) =>
-      lastPage.hasNextPage ? lastPage.nextCursor : undefined,
+      lastPage?.hasNextPage ? lastPage.nextCursor : undefined,
     initialPageParam: undefined,
   });
-
-  // Keep loading state in ref for observer callback
-  isLoadingRef.current = isFetchingNextPage;
-
-  // Set up intersection observer
+  // ── Intersection Observer setup ──────────────────────────
   useEffect(() => {
-    const element = sentinelRef.current;
-    if (!element) return;
+    const sentinel = sentinelRef.current;
+      if (!sentinel) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoadingRef.current) {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          console.log('Sentinel visible — fetching next page...');
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      {
+        root: null,       // observe relative to viewport
+        rootMargin: '200px', // start loading 200px BEFORE reaching the bottom
+        threshold: 0,     // fire as soon as even 1px is visible
+      }
     );
 
-    observer.observe(element);
+    observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [fetchNextPage]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) return (
     <div className="flex justify-center items-center py-24">
@@ -99,8 +101,12 @@ export default function VideoFeed({ type = 'forYou', userInteracted }) {
         />
       ))}
 
-      {/* Sentinel element — triggers loading more when visible */}
-      <div ref={sentinelRef} className="py-4 flex justify-center">
+      {/* Sentinel — triggers next page load when visible */}
+      <div
+        ref={sentinelRef}
+        className="py-8 flex justify-center"
+        style={{ minHeight: '80px' }}
+      >
         {isFetchingNextPage ? (
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
@@ -108,9 +114,9 @@ export default function VideoFeed({ type = 'forYou', userInteracted }) {
           </div>
         ) : hasNextPage ? (
           <div className="text-gray-300 text-xs">Scroll for more</div>
-        ) : (
+        ) : allVideos.length > 0 ? (
           <div className="text-gray-300 text-xs">You've seen all videos</div>
-        )}
+        ) : null}
       </div>
     </div>
   );
