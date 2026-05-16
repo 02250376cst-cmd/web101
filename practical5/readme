@@ -1,0 +1,136 @@
+# Practical 5: Infinite Scroll with TanStack Query
+---
+
+## What I Did
+
+In this practical I implemented infinite scrolling in the TikTok clone's video feed using TanStack Query and cursor-based pagination. Previously the feed made a single API request and returned every video in the database at once. Now it loads 5 videos at a time and automatically fetches the next batch as the user scrolls toward the bottom — exactly like the real TikTok feed.
+
+---
+
+## Tech Stack Added
+
+| Tool | Purpose |
+|---|---|
+| `@tanstack/react-query` | Data fetching, caching, and infinite scroll state management |
+| `@tanstack/react-query-devtools` | Debug panel showing query state in browser |
+| Intersection Observer API | Detects when user scrolls to bottom to trigger next page load |
+| Cursor-based pagination | Efficient database querying without offset drift |
+
+---
+
+## What Changed
+
+### Backend
+- Updated `getAllVideos` in `videoController.js` — now accepts `cursor` and `limit` query params
+- Updated `getFollowingVideos` — same cursor-based pagination added
+- Response format changed from plain array to:
+  ```json
+  { "videos": [...], "nextCursor": 42, "hasNextPage": true }
+  ```
+
+### Frontend
+- Updated `src/app/layout.js` — added `QueryClientProvider` wrapping the whole app
+- Updated `src/services/videoService.js` — `getAllVideos` and `getFollowingVideos` now accept cursor param
+- Created `src/hooks/useIntersectionObserver.js` — reusable hook for detecting scroll position
+- Updated `src/components/ui/VideoFeed.jsx` — replaced `useState/useEffect` fetch with `useInfiniteQuery`
+- Updated `src/app/page.js` and `src/app/following/page.jsx` — pass `userInteracted` down to feed
+- Fixed `src/app/explore/page.jsx` — updated to handle new paginated response format
+
+---
+
+## Project Structure (new files)
+
+```
+client/
+└── src/
+    ├── hooks/
+    │   └── useIntersectionObserver.js   ← NEW
+    └── components/
+        └── ui/
+            └── VideoFeed.jsx            ← UPDATED (useInfiniteQuery)
+```
+
+---
+
+## How Cursor-Based Pagination Works
+
+```
+First request:
+GET /api/videos?limit=5
+→ Returns videos with IDs 50, 49, 48, 47, 46
+→ nextCursor: 46, hasNextPage: true
+
+Second request (when user scrolls to bottom):
+GET /api/videos?limit=5&cursor=46
+→ Returns videos with IDs 45, 44, 43, 42, 41
+→ nextCursor: 41, hasNextPage: true
+
+...continues until hasNextPage: false
+```
+
+---
+
+## Setup Instructions
+
+### 1. Install dependencies
+
+```bash
+cd client
+npm install @tanstack/react-query @tanstack/react-query-devtools
+```
+
+### 2. Start servers
+
+```bash
+# Terminal 1
+cd server && npm run dev
+
+# Terminal 2
+cd client && npm run dev
+```
+
+### 3. Test pagination
+
+Open browser and visit:
+```
+http://localhost:5000/api/videos?limit=5
+```
+
+Should return:
+```json
+{
+  "videos": [...5 videos...],
+  "nextCursor": 46,
+  "hasNextPage": true
+}
+```
+
+---
+
+## Key Concepts
+
+### n+1 Pattern
+The backend requests `limit + 1` items from the database. If it gets back more than `limit` items, it knows there's a next page. The extra item is removed before sending the response. This avoids running a separate `COUNT(*)` query.
+
+### Intersection Observer
+An invisible `div` (the sentinel) sits at the bottom of the feed. An `IntersectionObserver` watches it. When the sentinel enters the viewport (user has scrolled to the bottom), `fetchNextPage()` is called. The `rootMargin: '200px'` setting starts loading the next page 200px before the user actually hits the bottom, making the scroll feel seamless.
+
+### TanStack Query Cache
+`useInfiniteQuery` uses the key `['videos', type]` to cache pages. Switching between "For You" and "Following" and switching back doesn't re-fetch while the data is still fresh (1 minute stale time). Each page is stored separately and flattened with `flatMap` for rendering.
+
+---
+
+## API Endpoints (updated)
+
+| Method | Endpoint | Params | Description |
+|---|---|---|---|
+| GET | `/api/videos` | `cursor`, `limit` | Paginated For You feed |
+| GET | `/api/videos/following` | `cursor`, `limit` | Paginated Following feed |
+
+---
+
+## Known Limitations
+
+- No pull-to-refresh
+- No scroll position restoration when navigating back to feed
+- Explore page loads all pages sequentially which is inefficient for large datasets

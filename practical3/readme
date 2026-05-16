@@ -1,0 +1,246 @@
+# Practical 3 — File Upload Implementation (Frontend: React/Next.js)
+
+## Overview
+
+This project implements a **client-side file upload interface** using React (via Next.js). It features a drag-and-drop upload zone, file type and size validation, real-time upload progress tracking, and PDF preview support — all connected to an Express backend (see the companion backend README).
+
+---
+
+## Features
+
+- **Drag and drop interface** using `react-dropzone`
+- **File type validation** — accepts JPEG, PNG, and PDF only
+- **File size validation** — rejects files larger than 5MB
+- **Upload progress bar** — real-time progress via Axios's `onUploadProgress`
+- **Image preview** — shows image thumbnail before upload
+- **PDF indicator** — shows filename and icon for PDF files
+- **Success/error feedback** — displays upload result with file details
+- **Form management** with `react-hook-form`
+
+---
+
+## Tech Stack
+
+| Package | Purpose |
+|---------|---------|
+| `next.js` | React framework and development environment |
+| `react-hook-form` | Form state management and validation |
+| `axios` | HTTP client with upload progress support |
+| `react-dropzone` | Drag-and-drop file input component |
+| `formidable` | (Used in API route) Server-side multipart form parsing |
+
+---
+
+## Project Structure
+
+```
+file-upload/
+├── pages/
+│   ├── index.js            # Main upload page — form, dropzone, preview, progress
+│   └── api/
+│       └── upload.js       # Next.js API route — receives and validates uploads
+├── public/                 # Static assets
+├── styles/                 # CSS modules (if applicable)
+├── package.json
+└── README.md
+```
+
+---
+
+## Setup and Installation
+
+```bash
+# 1. Create the Next.js project
+npx create-next-app file-upload
+cd file-upload
+
+# 2. Install required dependencies
+npm install react-hook-form formidable axios react-dropzone
+
+# 3. Start the development server
+npm run dev
+
+# 4. Open in browser
+# http://localhost:3000
+```
+
+---
+
+## Implementation Details
+
+### `pages/index.js` — Main Upload Page
+
+The page is composed of the following functional sections:
+
+#### 1. React Hook Form Setup
+
+```js
+const { register, handleSubmit, formState: { errors } } = useForm();
+```
+
+React Hook Form manages the form state, handles submission, and exposes validation errors without controlled inputs.
+
+#### 2. Dropzone Configuration
+
+```js
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  accept: {
+    'image/jpeg': [],
+    'image/png': [],
+    'application/pdf': []
+  },
+  maxSize: 5 * 1024 * 1024, // 5MB
+  onDrop: (acceptedFiles) => {
+    onDrop(acceptedFiles);
+
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+
+      if (file.type.startsWith('image/')) {
+        // Generate preview URL for images
+        const previewUrl = URL.createObjectURL(file);
+        setFilePreview({ url: previewUrl, name: file.name, type: file.type });
+      } else if (file.type === 'application/pdf') {
+        // Show filename only for PDFs (no preview URL needed)
+        setFilePreview({ name: file.name, type: file.type });
+      } else {
+        setFilePreview(null);
+      }
+    }
+  }
+});
+```
+
+#### 3. File Preview Section
+
+```jsx
+{filePreview && (
+  <div className="mb-4">
+    <h3>Preview:</h3>
+    <div className="border rounded p-2">
+      {filePreview.type?.startsWith('image/') ? (
+        // Show actual image preview
+        <img src={filePreview.url} alt={filePreview.name} className="max-w-full h-auto max-h-40 rounded" />
+      ) : filePreview.type === 'application/pdf' ? (
+        // Show PDF icon + filename
+        <div className="py-2 px-3 bg-gray-100 rounded flex items-center">
+          <svg className="w-6 h-6 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            {/* PDF icon paths */}
+          </svg>
+          <span>{filePreview.name}</span>
+        </div>
+      ) : (
+        <div>File selected: {filePreview.name}</div>
+      )}
+    </div>
+  </div>
+)}
+```
+
+#### 4. Upload with Progress Tracking
+
+The `onSubmit` function connects to the **Express backend** (not the Next.js API route) for the final implementation:
+
+```js
+const onSubmit = async (data) => {
+  setIsUploading(true);
+  setUploadProgress(0);
+  setUploadResult(null);
+
+  try {
+    const formData = new FormData();
+    formData.append('file', data.file[0]);
+    formData.append('name', data.name);
+
+    const response = await axios.post('http://localhost:8000/api/upload', formData, {
+      onUploadProgress: (progressEvent) => {
+        const percentage = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        setUploadProgress(percentage);
+      }
+    });
+
+    setUploadResult({ success: true, message: 'File uploaded successfully!', data: response.data });
+  } catch (error) {
+    setUploadResult({
+      success: false,
+      message: error.response?.data?.error || 'Upload failed'
+    });
+  } finally {
+    setIsUploading(false);
+  }
+};
+```
+
+---
+
+## State Variables
+
+| State | Type | Purpose |
+|-------|------|---------|
+| `isUploading` | Boolean | Disables form and shows uploading indicator |
+| `uploadProgress` | Number (0–100) | Drives the progress bar percentage |
+| `uploadResult` | Object \| null | Holds success/error message and file details |
+| `filePreview` | Object \| null | Holds preview URL and metadata for selected file |
+
+---
+
+## Validation Rules
+
+| Rule | Value | Error Message |
+|------|-------|---------------|
+| Required | Yes | "Please select a file" |
+| Accepted types | JPEG, PNG, PDF | Rejected by dropzone (no message shown) |
+| Max size | 5MB | Rejected by dropzone (no message shown) |
+
+---
+
+## Connecting to the Backend
+
+The frontend posts to:
+
+```
+POST http://localhost:8000/api/upload
+```
+
+This is the **Express backend server** (see companion backend README). Ensure the backend is running before testing uploads.
+
+**Key change from Next.js API route:**
+```js
+// Original (Next.js API route — development only)
+// await axios.post('/api/upload', formData, ...);
+
+// Updated (Express backend — production-oriented)
+await axios.post('http://localhost:8000/api/upload', formData, { ... });
+```
+
+---
+
+## Running the Application
+
+```bash
+# Terminal 1 — Start the Express backend (port 8000)
+cd file-upload-server
+node server.js
+
+# Terminal 2 — Start the Next.js frontend (port 3000)
+cd file-upload
+npm run dev
+
+# Then open: http://localhost:3000
+```
+
+---
+
+## Testing the Upload
+
+1. Open `http://localhost:3000`
+2. Drag a file into the dropzone OR click to browse
+3. Verify the preview appears (image thumbnail or PDF filename)
+4. Click **Upload**
+5. Watch the progress bar fill to 100%
+6. Verify the success message shows filename, type, size, and URL
+7. Test error cases:
+   - Upload a `.txt` or `.gif` file → should be rejected by dropzone
+   - Upload a file larger than 5MB → should be rejected

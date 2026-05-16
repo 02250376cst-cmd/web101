@@ -1,0 +1,218 @@
+# Weather API Dashboard — RESTful API Operations (GET, POST, PUT, DELETE)
+
+## Overview
+
+This project is a **vanilla JavaScript web application** that demonstrates all four core HTTP methods (GET, POST, PUT, DELETE) by integrating two public REST APIs:
+
+- **OpenWeatherMap API** — provides real-time weather data (GET requests)
+- **JSONPlaceholder API** — simulates a persistent location store (POST, PUT, DELETE requests)
+
+The application has a tabbed UI built with plain HTML and CSS — no frameworks required. It runs by simply opening `index.html` in any modern browser.
+
+---
+
+## Features
+
+| Tab | Operation | API Used | Description |
+|-----|-----------|----------|-------------|
+| GET Weather | `GET` | OpenWeatherMap | Fetch current weather by city name |
+| POST Location | `POST` | JSONPlaceholder | Save a new location record |
+| Saved Locations | `PUT` / `DELETE` | JSONPlaceholder | Edit or remove saved locations |
+| API Info | — | — | Displays last request metadata |
+
+---
+
+## Project Structure
+
+```
+weather-api-dashboard/
+├── index.html       # Full UI — HTML structure + embedded CSS
+├── script.js        # All JavaScript logic — API calls, DOM updates, state
+└── README.md
+```
+
+This is an intentionally minimal project structure — no build tools, no bundlers, no npm packages.
+
+---
+
+## Setup
+
+### 1. Get an OpenWeatherMap API Key
+
+1. Sign up at [https://openweathermap.org](https://openweathermap.org)
+2. Navigate to **API Keys** in your account dashboard
+3. Copy your key
+
+### 2. Add Your API Key
+
+Open `script.js` and replace the placeholder on line 2:
+
+```js
+const WEATHER_API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY'; // Replace this
+```
+
+### 3. Run the Application
+
+No server or build step required:
+
+```bash
+# Option A — just open the file
+open index.html
+
+# Option B — serve with a simple HTTP server (avoids any CORS issues)
+npx serve .
+# then visit http://localhost:3000
+```
+
+---
+
+## How Each HTTP Method Is Implemented
+
+### GET — Fetch Weather Data
+
+```js
+// Constructs URL with city name and API key as query parameters
+const url = `${WEATHER_API_URL}?q=${encodeURIComponent(city)}&units=metric&appid=${WEATHER_API_KEY}`;
+const response = await fetch(url);
+const data = await response.json();
+```
+
+- Uses `fetch()` with no options (default GET)
+- Encodes city name with `encodeURIComponent()` to handle spaces and special characters
+- Displays temperature, weather description, humidity, and wind speed
+- Offers a **"Save This Location"** button that pre-fills the POST form
+
+---
+
+### POST — Save a Location
+
+```js
+const response = await fetch(PLACEHOLDER_API_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(locationData)
+});
+```
+
+- Sends location data (name, city, country, notes) as JSON to JSONPlaceholder
+- The API returns a new object with an auto-assigned `id`
+- The saved location is added to the local `savedLocations` array and rendered on screen
+- Form fields are cleared after successful submission
+
+---
+
+### PUT — Update a Location
+
+```js
+const response = await fetch(`${PLACEHOLDER_API_URL}/${id}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(updatedData)
+});
+```
+
+- Clicking **Edit** on a saved location opens a modal pre-filled with the current data
+- On submit, a PUT request is sent to `JSONPlaceholder/posts/:id`
+- The local `savedLocations` array is updated on success and the list re-renders
+
+---
+
+### DELETE — Remove a Location
+
+```js
+const response = await fetch(`${PLACEHOLDER_API_URL}/${id}`, {
+  method: 'DELETE'
+});
+```
+
+- A confirmation prompt (`confirm()`) prevents accidental deletion
+- On success, the location is filtered out of the local array and the list re-renders
+
+---
+
+## Application State
+
+All state is held in a single module-level array:
+
+```js
+let savedLocations = []; // Array of { id, name, city, country, notes }
+```
+
+On page load, `fetchSavedLocations()` populates this array by fetching the first 5 posts from JSONPlaceholder and mapping them to the location format.
+
+---
+
+## Response Information Panel
+
+The **API Info** tab shows metadata about the most recent request:
+
+```
+Method: GET
+URL: https://api.openweathermap.org/data/2.5/weather?q=London&...
+Status: 200
+Timestamp: 16/05/2026, 10:45:23
+
+Data: { "name": "London", "main": { "temp": 15.3, ... } }
+```
+
+This panel is useful for understanding exactly what was sent and received.
+
+---
+
+## API Endpoints Used
+
+### OpenWeatherMap
+
+```
+GET https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={key}
+```
+
+**Response fields used:**
+- `data.name` — city name
+- `data.sys.country` — country code
+- `data.weather[0].main` — weather type (e.g., "Clouds")
+- `data.weather[0].description` — detailed description
+- `data.main.temp` — temperature (°C)
+- `data.main.feels_like` — feels-like temperature
+- `data.main.humidity` — humidity percentage
+- `data.wind.speed` — wind speed (m/s)
+
+---
+
+### JSONPlaceholder
+
+```
+GET    https://jsonplaceholder.typicode.com/posts?userId=1
+POST   https://jsonplaceholder.typicode.com/posts
+PUT    https://jsonplaceholder.typicode.com/posts/:id
+DELETE https://jsonplaceholder.typicode.com/posts/:id
+```
+
+> **Note:** JSONPlaceholder is a fake REST API for testing. POST/PUT/DELETE operations return success responses but **do not actually persist data** on the server. Local state management in `savedLocations[]` simulates persistence within the session.
+
+---
+
+## Error Handling
+
+All API operations are wrapped in `try-catch`:
+
+```js
+try {
+  const response = await fetch(...);
+  if (!response.ok) throw new Error(data.message || 'Request failed');
+  // handle success
+} catch (error) {
+  // display error in UI
+}
+```
+
+If the weather city is not found, OpenWeatherMap returns a non-`ok` response, and the error message is displayed in the weather result area with a red border.
+
+---
+
+## Testing Each Operation
+
+1. **GET**: Enter a city name (e.g., `London`, `Thimphu`) → click **Get Weather**
+2. **POST**: Fill in Location Name, City, Country → click **Save Location**
+3. **PUT**: Click **Edit** on a saved location → change fields → click **Update**
+4. **DELETE**: Click **Delete** on a saved location → confirm the prompt
